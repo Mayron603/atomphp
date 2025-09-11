@@ -1,88 +1,41 @@
-<?php
-
-use Core\Library\Session;
-
-?>
-
 <!DOCTYPE html>
-<html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="AtomPHP, microframework">
-        <meta name="autho" content="Aldecir fonseca">
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>MuriaeEmpregos - Conectando talentos e oportunidades</title> 
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="<?= baseUrl() ?>assets/css/style.css">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="<?= baseUrl() ?>">
+                <img src="<?= baseUrl() ?>assets/img/logo.png" alt="Conecta Muriaé">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="<?= baseUrl() ?>">Início</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= baseUrl() ?>vagas">Vagas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= baseUrl() ?>sobre">Sobre</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= baseUrl() ?>contato">Contato</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-3 mt-lg-0">
+                    <a href="<?= baseUrl() ?>login" class="btn btn-outline-primary me-2">Entrar</a>
+                    <a href="<?= baseUrl() ?>login/cadastro" class="btn btn-primary">Cadastrar</a>
 
-        <title>AtomPHP | FASM 2025</title>
-
-        <link href="<?= baseUrl() ?>assets/img/AtomPHP-icone.png" rel="icon" type="image/png">
-
-        <link href="<?= baseUrl() ?>assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
-        <!-- Fontawesome -->
-        <link href="<?= baseUrl() ?>assets/fontawesome-free-6.7.2-web/css/fontawesome.css" rel="stylesheet" />
-        <link href="<?= baseUrl() ?>assets/fontawesome-free-6.7.2-web/css/brands.css" rel="stylesheet" />
-        <link href="<?= baseUrl() ?>assets/fontawesome-free-6.7.2-web/css/solid.css" rel="stylesheet" />
-        <link href="<?= baseUrl() ?>assets/fontawesome-free-6.7.2-web/css/sharp-thin.css" rel="stylesheet" />
-        <link href="<?= baseUrl() ?>assets/fontawesome-free-6.7.2-web/css/duotone-thin.css" rel="stylesheet" />
-        <link href="<?= baseUrl() ?>assets/fontawesome-free-6.7.2-web/css/sharp-duotone-thin.css" rel="stylesheet" />
-        <!-- Fontawesome -->
-
-        <script src="<?= baseUrl() ?>assets/js/jquery-3.5.1.min.js"></script>
-        <script src="<?= baseUrl() ?>assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-    </head>
-    <body>
-        <header class="container-fluid">
-
-            <nav class="navbar navbar-expand-lg bg-body-tertiary">
-                <div class="container-fluid">
-                    <a class="navbar-brand" href="<?= baseUrl() ?>"><img class="login-img" src="/assets/img/AtomPHP-logo.png" alt="" height="90" width="90"></a>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="<?= baseUrl() ?>">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Quem Somos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= baseUrl() ?>Home/produtos">Produtos/Serviços</a>
-                        </li>
-
-                        <?php if (Session::get("userId")): ?>
-
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Usuário
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="<?= baseUrl() ?>login/signOut">Sair</a></li>
-                                    <?php if ((int)Session::get("userNivel") <= 20): ?>
-                                        <li><a class="dropdown-item" href="<?= baseUrl() ?>usuario">Usuario</a></li>
-                                    <?php endif; ?>                
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?= baseUrl() ?>Sistema/formTrocarSenha">Trocar a Senha</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?= baseUrl() ?>uf">UF's</a></li>
-                                    <li><a class="dropdown-item" href="<?= baseUrl() ?>cidade">Cidade</a></li>
-                                </ul>
-                            </li>
-
-                        <?php else: ?>
-
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?= baseUrl() ?>Login">Área restrita</a>
-                            </li>
-
-                        <?php endif; ?>
-
-                    </ul>
-                    </div>
                 </div>
-                </nav>
-        </header>
-        
-        <main class="container">
+            </div>
+        </div>
+    </nav>

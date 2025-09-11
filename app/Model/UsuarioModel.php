@@ -9,32 +9,39 @@ class UsuarioModel extends ModelMain
     protected $table = "usuario";
 
     public $validationRules = [
-        "nome"  => [
-            "label" => 'Nome',
-            "rules" => 'required|min:3|max:60'
+        "login"  => [
+            "label" => 'Login',
+            "rules" => 'required|min:5|max:50'
         ],
-        "email"  => [
-            "label" => 'Email',
-            "rules" => 'required|min:5|max:150'
+        "senha"  => [
+            "label" => 'Senha',
+            "rules" => '' // Removido o 'required'
         ],
-        "nivel"  => [
-            "label" => 'Nível',
-            "rules" => 'required|int'
-        ],
-        "statusRegistro"  => [
-            "label" => 'Status',
-            "rules" => 'required|int'
+        "tipo"  => [
+            "label" => 'Tipo',
+            "rules" => 'char:2' // Removido o 'required'
         ]
     ];
 
     /**
      * getUserEmail
      *
-     * @param string $email 
+     * @param string $login 
      * @return array
      */
-    public function getUserEmail($email)
+    public function getUserEmail($login)
     {
-        return $this->db->where("email", $email)->first();
+        return $this->db->where("login", $login)->first();
+    }
+
+    /**
+     * registrarUsuario
+     *
+     * @param array $dados
+     * @return boolean
+     */
+    public function registrarUsuario($dados)
+    {
+        return $this->insert($dados);
     }
 }
