@@ -47,4 +47,73 @@ class VagaModel extends ModelMain
             "rules" => 'required|integer'
         ]
     ];
+
+    /**
+     * Lista todas as vagas públicas com cargo e estabelecimento
+     */
+    public function listarPublicas()
+    {
+        return $this->db->table($this->table . ' v')
+            ->select(
+                'v.*, ' .
+                'c.descricao as cargo_descricao, ' .
+                'e.nome as nome_fantasia'
+            )
+            ->join('cargo c', 'v.cargo_id = c.cargo_id')
+            ->join('estabelecimento e', 'v.estabelecimento_id = e.estabelecimento_id')
+            ->where('v.statusVaga', 11) // apenas vagas ativas
+            ->orderBy('v.dtInicio', 'DESC')
+            ->findAll();
+    }
+
+    /**
+     * Busca uma vaga completa pelo ID
+     */
+    public function findCompletoById($vagaId)
+    {
+        if (empty($vagaId)) {
+            return null;
+        }
+
+        return $this->db->table($this->table . ' v')
+            ->select(
+                'v.*, ' .
+                'c.descricao as cargo_descricao, ' .
+                'e.nome as nome_fantasia'
+            )
+            ->join('cargo c', 'v.cargo_id = c.cargo_id')
+            ->join('estabelecimento e', 'v.estabelecimento_id = e.estabelecimento_id')
+            ->where('v.vaga_id', $vagaId)
+            ->first();
+    }
+
+    /**
+     * Busca todas as vagas de um estabelecimento específico
+     */
+    public function getByEstabelecimento($idEstabelecimento)
+    {
+        if (empty($idEstabelecimento)) {
+            return [];
+        }
+
+        return $this->db->table($this->table . ' v')
+            ->select(
+                'v.*, ' .
+                'c.descricao as cargo_descricao, ' .
+                'e.nome as nome_fantasia'
+            )
+            ->join('cargo c', 'v.cargo_id = c.cargo_id')
+            ->join('estabelecimento e', 'v.estabelecimento_id = e.estabelecimento_id')
+            ->where('v.estabelecimento_id', $idEstabelecimento)
+            ->orderBy('v.dtInicio', 'DESC')
+            ->findAll();
+    }
+
+    /**
+     * Busca uma vaga pelo ID (compatível com ModelMain::getById)
+     */
+    public function getById($id)
+    {
+        return $this->db->where($this->primaryKey, $id)->first();
+    }
 }

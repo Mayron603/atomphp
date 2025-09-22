@@ -10,17 +10,25 @@ class EstabelecimentoModel extends ModelMain
     protected $primaryKey = "estabelecimento_id";
 
     public $validationRules = [
-        "nome"  => [
+        "nome" => [
             "label" => 'Nome',
             "rules" => 'required|max:50'
         ],
-        "latitude"  => [
-            "label" => 'Latitude',
-            "rules" => 'required|char:12'
+        "endereco" => [
+            "label" => 'Endereço',
+            "rules" => 'required|max:200'
         ],
-        "longitude"  => [
+        "latitude" => [
+            "label" => 'Latitude',
+            "rules" => 'required|max:12'
+        ],
+        "longitude" => [
             "label" => 'Longitude',
-            "rules" => 'required|char:12'
+            "rules" => 'required|max:12'
+        ],
+        "email" => [
+            "label" => 'E-mail',
+            "rules" => 'required|email|max:150'
         ]
     ];
 }

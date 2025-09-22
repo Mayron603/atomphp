@@ -54,7 +54,7 @@ class Validator
 
                             case "min" :                    
                                 
-                                if (strlen(strip_tags($data[$ruleKey])) < $items[ 1 ] ){
+                                if (strlen(strip_tags($data[$ruleKey])) < $items[ 1 ] ) {
                                     $errors[$ruleKey] = "O campo <b>{$ruleValue['label']}</b> dever conter um mínimo " . $items[ 1 ] . " caracteres.";
                                 }
 
@@ -62,7 +62,7 @@ class Validator
                             
                             case 'max' :
                     
-                                if (strlen(strip_tags($data[$ruleKey])) > $items[ 1 ] ){
+                                if (strlen(strip_tags($data[$ruleKey])) > $items[ 1 ] ) {
                                     $errors[$ruleKey] = "O campo <b>{$ruleValue['label']}</b> dever conter um maximo " . $items[ 1 ] . " caracteres.";
                                 }
 
@@ -90,7 +90,9 @@ class Validator
 
                 }
             } else {
-                $errors[$ruleKey] = "O campo <b>{$ruleValue['label']}</b> é obrigatório [" . $data[$ruleKey] . "].";
+                 if (in_array('required', $itensRule)) {
+                    $errors[$ruleKey] = "O campo <b>{$ruleValue['label']}</b> é obrigatório.";
+                }
             }
         }
 

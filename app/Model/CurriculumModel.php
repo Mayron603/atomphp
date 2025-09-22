@@ -12,7 +12,6 @@ class CurriculumModel extends ModelMain
     protected $table = "curriculum";
     protected $primaryKey = "curriculum_id";
 
-    // Regras de validação ajustadas: validamos apenas cidade_id
     public $validationRules = [
         'dataNascimento'       => ['label' => 'Data de Nascimento', 'rules' => 'required|date'],
         'sexo'                 => ['label' => 'Sexo', 'rules' => 'required|in:M,F'],
@@ -32,6 +31,48 @@ class CurriculumModel extends ModelMain
         return $this->db->where("pessoa_fisica_id", $pessoaFisicaId)->first();
     }
     
+    public function getCompletoById($curriculoId)
+    {
+        if (empty($curriculoId)) {
+            return [];
+        }
+
+        // 1. Dados principais do currículo
+        $sqlCurriculo = "SELECT c.*, p.nome, p.cpf 
+                         FROM curriculum c 
+                         JOIN pessoa_fisica p ON c.pessoa_fisica_id = p.pessoa_fisica_id 
+                         WHERE c.curriculum_id = ?";
+        $rscCurriculo = $this->db->dbSelect($sqlCurriculo, [$curriculoId]);
+        $curriculo = $this->db->dbBuscaArray($rscCurriculo);
+
+        if (empty($curriculo)) {
+            return [];
+        }
+
+        // 2. Escolaridades (FK: curriculum_curriculum_id)
+        $sqlEscolaridades = "SELECT * 
+                             FROM curriculum_escolaridade 
+                             WHERE curriculum_curriculum_id = ?";
+        $rscEscolaridades = $this->db->dbSelect($sqlEscolaridades, [$curriculoId]);
+        $curriculo['escolaridades'] = $this->db->dbBuscaArrayAll($rscEscolaridades);
+
+        // 3. Experiências (FK: curriculum_id)
+        $sqlExperiencias = "SELECT * 
+                            FROM curriculum_experiencia 
+                            WHERE curriculum_id = ?";
+        $rscExperiencias = $this->db->dbSelect($sqlExperiencias, [$curriculoId]);
+        $curriculo['experiencias'] = $this->db->dbBuscaArrayAll($rscExperiencias);
+
+        // 4. Qualificações (FK: curriculum_id)
+        $sqlQualificacoes = "SELECT * 
+                             FROM curriculum_qualificacao 
+                             WHERE curriculum_id = ?";
+        $rscQualificacoes = $this->db->dbSelect($sqlQualificacoes, [$curriculoId]);
+        $curriculo['qualificacoes'] = $this->db->dbBuscaArrayAll($rscQualificacoes);
+
+        return $curriculo;
+    }
+
     /**
      * Cria ou atualiza um currículo com a lógica de cidade/uf
      */

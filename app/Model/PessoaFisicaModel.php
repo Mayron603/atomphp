@@ -20,6 +20,17 @@ class PessoaFisicaModel extends ModelMain
     ];
 
     /**
+     * Busca um CPF no banco de dados.
+     *
+     * @param string $cpf O CPF a ser pesquisado (somente números).
+     * @return mixed Retorna os dados do usuário se encontrado, caso contrário, false.
+     */
+    public function getCpf(string $cpf)
+    {
+        return $this->db->table($this->table)->where('cpf', $cpf)->first();
+    }
+
+    /**
      * Atualiza o nome de uma pessoa física.
      *
      * @param int    $pessoaFisicaId O ID da pessoa a ser atualizada.

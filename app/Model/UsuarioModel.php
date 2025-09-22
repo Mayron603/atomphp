@@ -7,6 +7,7 @@ use Core\Library\ModelMain;
 class UsuarioModel extends ModelMain
 {
     protected $table = "usuario";
+    protected $primaryKey = "usuario_id";
 
     public $validationRules = [
         "login"  => [
@@ -15,30 +16,30 @@ class UsuarioModel extends ModelMain
         ],
         "senha"  => [
             "label" => 'Senha',
-            "rules" => '' // Removido o 'required'
+            "rules" => 'required'
         ],
         "tipo"  => [
             "label" => 'Tipo',
-            "rules" => 'char:2' // Removido o 'required'
+            "rules" => 'required|max:2'
         ]
     ];
 
     /**
-     * getUserEmail
+     * Busca um usuário pelo seu login (email).
      *
      * @param string $login 
-     * @return array
+     * @return array|null
      */
     public function getUserEmail($login)
     {
-        return $this->db->where("login", $login)->first();
+        return $this->db->table($this->table)->where("login", $login)->first();
     }
 
     /**
-     * registrarUsuario
+     * Método genérico de registro de usuário que usa o insert do ModelMain.
      *
      * @param array $dados
-     * @return boolean
+     * @return int|bool O ID do usuário inserido ou false em caso de falha.
      */
     public function registrarUsuario($dados)
     {

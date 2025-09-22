@@ -4,29 +4,24 @@ namespace Core\Library;
 
 class Routes
 {
-    use RequestTrait;
-
-    /**
-     * rota
-     *
-     * @return void
-     */
     public static function rota()
     {
-        $pathContr      = "App\Controller\\";
-        $aParametros    = Self::getRotaParametros();
-        $controller     = $pathContr . $aParametros['controller'];
+        $request = new Request;
+        $controller = $request->getController();
+        $method = $request->getMethod();
+        $args = $request->getArgs();
 
-        if (!class_exists($controller)) {
-            Erros::controllerNotFound();
-        } else {
-            if (!method_exists($controller, $aParametros['method'])) {
-                Erros::methodNotFound();
-            } else {
-                $instance = new $controller();
-                call_user_func_array([$instance, $aParametros['method']], array_merge([$aParametros['action'], $aParametros["id"]], $aParametros['outrosPar']));
-                return;
-            }
+        $controller = ucfirst($controller);
+
+        $caminho = 'App/Controller/' . $controller . '.php';
+
+        if (!file_exists($caminho)) {
+            echo "Controller não localizado na estrutura do projeto.";
+            exit;
         }
+        
+        $classe = 'App\Controller\' . $controller;
+        $callback = [new $classe, $method];
+        call_user_func_array($callback, $args);
     }
 }

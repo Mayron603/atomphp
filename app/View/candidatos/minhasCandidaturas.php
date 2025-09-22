@@ -1,4 +1,13 @@
-<?php include_once __DIR__ . "/comuns/candidato_cabecalho.php"; ?>
+<?php 
+// Mapa para traduzir o ID do vínculo para texto
+$mapaVinculo = [
+    '1' => 'CLT',
+    '2' => 'PJ',
+    '3' => 'Estágio',
+    '4' => 'Temporário',
+    '5' => 'Freelance'
+];
+?>
 
 <div class="container-fluid py-4">
     <div class="row">
@@ -7,36 +16,20 @@
         <div class="col-lg-9">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h4 mb-0">Minhas Candidaturas</h2>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-filter me-1"></i> Filtrar
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#">Todas</a></li>
-                                <li><a class="dropdown-item" href="#">Em análise</a></li>
-                                <li><a class="dropdown-item" href="#">Visualizadas</a></li>
-                                <li><a class="dropdown-item" href="#">Aprovadas</a></li>
-                                <li><a class="dropdown-item" href="#">Reprovadas</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <p class="text-muted mb-4">Acompanhe o status de todas as suas candidaturas.</p>
+                    <h2 class="h4 mb-4">Minhas Candidaturas</h2>
                     
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th>Vaga</th>
                                     <th>Empresa</th>
-                                    <th>Data</th>
+                                    <th>Data da Candidatura</th>
                                     <th>Status</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- CORREÇÃO: Trocado $aDados por $dados -->
                                 <?php if (empty($dados['candidaturas'])): ?>
                                     <tr>
                                         <td colspan="5" class="text-center py-5">
@@ -46,29 +39,21 @@
                                         </td>
                                     </tr>
                                 <?php else: ?>
-                                    <!-- CORREÇÃO: Trocado $aDados por $dados -->
                                     <?php foreach ($dados['candidaturas'] as $item): ?>
                                         <tr>
                                             <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="rounded-circle bg-primary bg-opacity-10" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                                            <i class="fas fa-briefcase text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-0"><?= htmlspecialchars($item['vaga']['descricao']) ?></h6>
-                                                        <small class="text-muted"><?= htmlspecialchars($item['vaga']['vinculo']) ?></small>
-                                                    </div>
-                                                </div>
+                                                <h6 class="mb-0 fw-bold"><?= htmlspecialchars($item['vaga']['descricao'] ?? 'Vaga não encontrada') ?></h6>
+                                                <!-- CORREÇÃO: Traduzindo o ID do vínculo para texto -->
+                                                <small class="text-muted"><?= htmlspecialchars($mapaVinculo[$item['vaga']['vinculo']] ?? 'Não especificado') ?></small>
                                             </td>
-                                            <td><?= htmlspecialchars($item['empresa']['nome']) ?></td>
-                                            <td><?= date("d/m/Y", strtotime($item['candidatura']['dtCriacao'])) ?></td>
+                                            <td><?= htmlspecialchars($item['empresa']['nome'] ?? 'Empresa não encontrada') ?></td>
+                                            <!-- CORREÇÃO: Usando a chave correta 'dateCandidatura' informada pelo usuário -->
+                                            <td><?= !empty($item['candidatura']['dateCandidatura']) ? date("d/m/Y", strtotime($item['candidatura']['dateCandidatura'])) : '<span class="text-muted">N/A</span>' ?></td>
                                             <td>
-                                                <span class="badge bg-secondary"><?= htmlspecialchars($item['candidatura']['status']) ?></span>
+                                                <span class="badge bg-secondary"><?= htmlspecialchars($item['candidatura']['status_candidatura'] ?? 'Pendente') ?></span>
                                             </td>
                                             <td>
-                                                <a href="<?= baseUrl() ?>vagas/visualizar/<?= $item['vaga']['vaga_id'] ?>" class="btn btn-sm btn-outline-primary">Detalhes</a>
+                                                <a href="<?= baseUrl() ?>vagas/visualizar/<?= $item['vaga']['vaga_id'] ?? '#' ?>" class="btn btn-sm btn-outline-primary">Ver Vaga</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -81,5 +66,3 @@
         </div>
     </div>
 </div>
-
-<?php include_once __DIR__ . "/comuns/candidato_rodape.php"; ?>

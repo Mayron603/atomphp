@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Model\UsuarioModel;
 use App\Model\PessoaFisicaModel;
 use App\Model\EstabelecimentoModel;
+use App\Model\TermoUsoModel;
+use App\Model\TermoAceiteModel;
 use Core\Library\ControllerMain;
 use Core\Library\Email;
 use Core\Library\Redirect;
@@ -12,34 +14,29 @@ use Core\Library\Session;
 
 class Login extends ControllerMain
 {
-    /**
-     * construct
-     */
+    private $pessoaFisicaModel;
+    private $termoUsoModel;
+    private $termoAceiteModel;
+
     public function __construct()
     {
         $this->auxiliarConstruct();
         $this->model = new UsuarioModel();
+        $this->pessoaFisicaModel = new PessoaFisicaModel();
+        $this->termoUsoModel = new TermoUsoModel();
+        $this->termoAceiteModel = new TermoAceiteModel();
         $this->loadHelper("formHelper");
     }
 
-    /**
-     * index
-     *
-     * @return void
-     */
     public function index()
     {
         if (!empty(Session::get('usuario_logado'))) {
-            return Redirect::page('candidatos');
+            $tipo = Session::get('usuario_logado')['tipo'];
+            return Redirect::page($tipo === 'A' || $tipo === 'G' ? 'empresa/index' : 'candidatos');
         }
         $this->loadView("login/login");
     }
 
-    /**
-     * cadastro
-     *
-     * @return void
-     */
     public function cadastro()
     {
         if (!empty(Session::get('usuario_logado'))) {
@@ -48,72 +45,108 @@ class Login extends ControllerMain
         $this->loadView("login/cadastro");
     }
 
-    /**
-     * registrar
-     *
-     * @return void
-     */
+    private function validaCPF($cpf) {
+        $cpf = preg_replace( '/[^0-9]/', '', $cpf);
+        if (strlen($cpf) != 11 || preg_match('/(\d)\1{10}/', $cpf)) {
+            return false;
+        }
+        for ($t = 9; $t < 11; $t++) {
+            for ($d = 0, $c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ($cpf[$c] != $d) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public function registrar()
     {
         $post = $this->request->getPost();
 
+        $setError = function($message) use ($post) {
+            Session::set('flash_msg', ['mensagem' => $message, 'tipo' => 'error']);
+            Session::set('form_data', $post);
+            return Redirect::page("login/cadastro");
+        };
+
+        if (empty($post['termos'])) {
+            return $setError('Você precisa aceitar os Termos de Uso e Políticas de Privacidade para continuar.');
+        }
+
+        // Validações...
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $setError('O formato do e-mail informado não é válido.');
+        }
+        $domain = substr(strrchr($email, "@"), 1);
+        if (!checkdnsrr($domain, 'MX') && !checkdnsrr($domain, 'A')) {
+            return $setError('O domínio do e-mail parece não existir ou é inválido.');
+        }
         if ($post['senha'] !== $post['confirmar_senha']) {
-            Session::set('flash_msg', ['mensagem' => 'As senhas não coincidem.', 'tipo' => 'error']);
-            return Redirect::page("login/cadastro");
+            return $setError('As senhas não coincidem.');
         }
-
-        if ($this->model->getUserEmail($post['login'])) {
-            Session::set('flash_msg', ['mensagem' => 'Este e-mail já está em uso.', 'tipo' => 'error']);
-            return Redirect::page("login/cadastro");
+        if ($this->model->getUserEmail($email)) {
+            return $setError('Este e-mail já está em uso.');
         }
-
-        $pessoaFisicaModel = new PessoaFisicaModel();
-        $pessoaFisicaId = $pessoaFisicaModel->insert([
-            'nome' => $post['nome'],
-            'cpf' => $post['cpf']
-        ]);
-
-        if (!$pessoaFisicaId) {
-            Session::set('flash_msg', ['mensagem' => 'Erro ao criar pessoa física.', 'tipo' => 'error']);
-            return Redirect::page("login/cadastro");
-        }
-
-        $estabelecimentoId = null;
-        if (isset($post['tipo']) && in_array($post['tipo'], ['A', 'G'])) {
-            $estabelecimentoModel = new EstabelecimentoModel();
-            $estabelecimentoId = $estabelecimentoModel->insert([
-                'nome' => $post['estabelecimento_nome'],
-            ]);
-
-            if (!$estabelecimentoId) {
-                Session::set('flash_msg', ['mensagem' => 'Erro ao criar estabelecimento.', 'tipo' => 'error']);
-                return Redirect::page("login/cadastro");
+        if ($tipo === 'CN') {
+            $cpf = preg_replace( '/[^0-9]/', '', $post['cpf']);
+            if (!$this->validaCPF($cpf)) {
+                return $setError('O CPF informado é inválido.');
+            }
+            if ($this->pessoaFisicaModel->getCpf($cpf)) {
+                return $setError('Este CPF já está em uso.');
             }
         }
 
-        $dadosUsuario = [
-            'pessoa_fisica_id' => $pessoaFisicaId,
-            'estabelecimento_id' => $estabelecimentoId,
-            'login' => $post['login'],
-            'senha' => password_hash($post['senha'], PASSWORD_DEFAULT),
-            'tipo' => $post['tipo'] ?? 'CN'
-        ];
-        
-        $usuarioModel = new UsuarioModel();
-        if ($usuarioModel->insert($dadosUsuario)) {
+        // Inserção do usuário
+        $usuarioId = null;
+        if ($tipo === 'CN') {
+            $cpf = preg_replace( '/[^0-9]/', '', $post['cpf']);
+            $pessoaFisicaId = $this->pessoaFisicaModel->db->table('pessoa_fisica')->insert(['nome' => $post['nome'], 'cpf' => $cpf]);
+            if ($pessoaFisicaId) {
+                $dadosUsuario = ['pessoa_fisica_id' => $pessoaFisicaId, 'login' => $email, 'senha' => password_hash($post['senha'], PASSWORD_DEFAULT), 'tipo' => 'CN'];
+                $usuarioId = $this->model->insert($dadosUsuario);
+            }
+        } elseif ($tipo === 'A') {
+            $estabelecimentoModel = new EstabelecimentoModel();
+            $estabelecimentoId = $estabelecimentoModel->db->table('estabelecimento')->insert(['nome' => $post['estabelecimento_nome'], 'email' => $post['estabelecimento_email']]);
+            if ($estabelecimentoId) {
+                $dadosUsuario = ['estabelecimento_id' => $estabelecimentoId, 'login' => $email, 'senha' => password_hash($post['senha'], PASSWORD_DEFAULT),'tipo' => 'A'];
+                $usuarioId = $this->model->insert($dadosUsuario);
+            }
+        } elseif ($tipo === 'G') {
+            $dadosUsuario = ['login' => $email, 'senha' => password_hash($post['senha'], PASSWORD_DEFAULT), 'tipo' => 'G'];
+            $usuarioId = $this->model->insert($dadosUsuario);
+        } else {
+            return $setError('Tipo de conta inválido selecionado.');
+        }
+
+        // Se o usuário foi criado, registra o aceite dos termos
+        if ($usuarioId) {
+            $termosIds = $this->termoUsoModel->getTermosAtivosIds();
+            if (!empty($termosIds)) {
+                $aceiteRegistrado = $this->termoAceiteModel->registrarAceite($usuarioId, $termosIds);
+                if (!$aceiteRegistrado) {
+                    // Idealmente, aqui você deveria deletar o usuário criado para não deixar dados órfãos
+                    return $setError('Ocorreu um erro ao registrar o aceite dos termos. Por favor, tente novamente.');
+                }
+            }
+
             Session::set('flash_msg', ['mensagem' => 'Cadastro realizado com sucesso!', 'tipo' => 'success']);
             return Redirect::page("login");
         } else {
-            Session::set('flash_msg', ['mensagem' => 'Erro ao realizar o cadastro do usuário.', 'tipo' => 'error']);
-            return Redirect::page("login/cadastro");
+            // Trata erros de inserção
+            $dbError = Session::get('msgError');
+            if ($dbError) {
+                Session::destroy('msgError');
+                return $setError('Erro do Banco de Dados: ' . $dbError);
+            } 
+            return $setError('Ocorreu um erro inesperado durante o cadastro.');
         }
     }
 
-    /**
-     * autenticar
-     *
-     * @return void
-     */
     public function autenticar()
     {
         $post = $this->request->getPost();
@@ -125,14 +158,14 @@ class Login extends ControllerMain
         }
 
         Session::set("usuario_logado", $user);
-        return Redirect::page("candidatos"); 
+        
+        if ($user['tipo'] === 'A' || $user['tipo'] === 'G') {
+            return Redirect::page("empresa/index"); 
+        } else {
+            return Redirect::page("candidatos"); 
+        }
     }
     
-    /**
-     * sair
-     *
-     * @return void
-     */
     public function sair()
     {
         Session::destroy("usuario_logado");
